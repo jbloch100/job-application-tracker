@@ -57,6 +57,14 @@ function App() {
     });
   }
 
+  function deleteApplication(idToDelete: number) {
+    setApplications(
+      applications.filter(
+        (application) => application.id !== idToDelete
+      )
+    );
+  }
+
   return (
     <main>
       <h1>Job Application Tracker</h1>
@@ -133,6 +141,12 @@ function App() {
           <p>{application.hiringManagerEmail}</p>
 
           <p>{application.notes}</p>
+
+          <button
+            onClick={() => deleteApplication(application.id)}
+          >
+            Delete
+          </button>
         </div>
       ))}
     </main>
