@@ -14,6 +14,7 @@ type JobApplication = {
 
 function App() {
   const [applications, setApplications] = useState<JobApplication[]>([]);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<JobApplication>({
     id: 0,
     company: "",
@@ -38,12 +39,25 @@ function App() {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    const newApplication = {
-      ...form,
-      id: Date.now(),
-    };
+    if (editingId !== null) {
+      const updatedApplications = applications.map((application) => {
+        if (application.id === editingId) {
+          return form;
+        }
 
-    setApplications([...applications, newApplication]);
+        return application;
+      });
+
+      setApplications(updatedApplications);
+      setEditingId(null);
+    } else {
+      const newApplication = {
+        ...form,
+        id: Date.now(),
+      };
+
+      setApplications([...applications, newApplication]);
+    }
 
     setForm({
       id: 0,
@@ -121,7 +135,9 @@ function App() {
           onChange={handleChange}
         />
 
-        <button type="submit">Add Application</button>
+        <button type="submit">
+          {editingId !== null ? "Update Application" : "Add Application"}
+        </button>
       </form>
 
       <p>Total Applications: {applications.length}</p>
@@ -141,6 +157,15 @@ function App() {
           <p>{application.hiringManagerEmail}</p>
 
           <p>{application.notes}</p>
+
+          <button
+            onClick={() => {
+              setForm(application);
+              setEditingId(application.id);
+            }}
+          >
+            Edit
+          </button>
 
           <button
             onClick={() => deleteApplication(application.id)}
