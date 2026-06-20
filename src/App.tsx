@@ -15,6 +15,7 @@ type JobApplication = {
 function App() {
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const [form, setForm] = useState<JobApplication>({
     id: 0,
     company: "",
@@ -79,6 +80,12 @@ function App() {
     );
   }
 
+  const filteredApplications = applications.filter((application) =>
+    application.company
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  );
+
   return (
     <main>
       <h1>Job Application Tracker</h1>
@@ -142,7 +149,13 @@ function App() {
 
       <p>Total Applications: {applications.length}</p>
 
-      {applications.map((application) => (
+      <input
+        placeholder="Search by company"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
+
+      {filteredApplications.map((application) => (
         <div className="application-card" key={application.id}>
           <h3>{application.company}</h3>
 
