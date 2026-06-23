@@ -16,6 +16,7 @@ function App() {
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
   const [form, setForm] = useState<JobApplication>({
     id: 0,
     company: "",
@@ -80,11 +81,17 @@ function App() {
     );
   }
 
-  const filteredApplications = applications.filter((application) =>
-    application.company
+  const filteredApplications = applications.filter((application) => {
+    const matchesSearch = application.company
       .toLowerCase()
-      .includes(searchTerm.toLowerCase())
-  );
+      .includes(searchTerm.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === "All" ||
+      application.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <main>
@@ -154,6 +161,17 @@ function App() {
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
       />
+
+      <select
+        value={statusFilter}
+        onChange={(e) => setStatusFilter(e.target.value)}
+      >
+        <option value="All">All Statuses</option>
+        <option value="Applied">Applied</option>
+        <option value="Interview">Interview</option>
+        <option value="Rejected">Rejected</option>
+        <option value="Offer">Offer</option>
+      </select>
 
       {filteredApplications.map((application) => (
         <div className="application-card" key={application.id}>
