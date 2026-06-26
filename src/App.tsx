@@ -16,6 +16,8 @@ function App() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [sortOrder, setSortOrder] = useState("newest");
   const [form, setForm] = useState<JobApplication>({
     id: 0,
     company: "",
@@ -57,6 +59,27 @@ function App() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    if (
+      !form.company ||
+      !form.jobTitle ||
+      !form.status ||
+      !form.applicationDate ||
+      !form.hiringManagerName ||
+      !form.hiringManagerEmail
+    ) {
+      setErrorMessage("Please fill in all required fields.");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(form.hiringManagerEmail)) {
+      setErrorMessage("Please enter a valid email address.");
+      return;
+    }
+
+    setErrorMessage("");
 
     if (editingId !== null) {
       const updatedApplications = applications.map((application) => {
@@ -110,6 +133,17 @@ function App() {
     return matchesSearch && matchesStatus;
   });
 
+  const sortedApplications = [...filteredApplications].sort((a, b) => {
+    const dateA = new Date(a.applicationDate).getTime();
+    const dateB = new Date(b.applicationDate).getTime();
+
+    if (sortOrder === "newest") {
+      return dateB - dateA;
+    }
+
+    return dateA - dateB;
+  });
+
 
   const totalApplications = applications.length;
 
@@ -158,6 +192,14 @@ function App() {
           <option value="Offer">Offer</option>
         </select>
 
+        <select
+          value={sortOrder}
+          onChange={(e) => setSortOrder(e.target.value)}
+        >
+          <option value="newest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+        </select>
+
         <input
           name="applicationDate"
           type="date"
@@ -189,6 +231,10 @@ function App() {
         <button type="submit">
           {editingId !== null ? "Update Application" : "Add Application"}
         </button>
+
+        {errorMessage && (
+          <p className="error">{errorMessage}</p>
+        )}
       </form>
 
       <section className="stats">
@@ -235,7 +281,7 @@ function App() {
         <option value="Offer">Offer</option>
       </select>
 
-      {filteredApplications.map((application) => (
+      {sortedApplications.map((application) => (
         <div className="application-card" key={application.id}>
           <h3>{application.company}</h3>
 
@@ -261,7 +307,15 @@ function App() {
           </button>
 
           <button
-            onClick={() => deleteApplication(application.id)}
+            onClick={() => {
+              const confirmed = window.confirm(
+                "Are you sure you want to delete this application?"
+              );
+
+              if (confirmed) {
+                deleteApplication(application.id);
+              }
+            }}
           >
             Delete
           </button>
