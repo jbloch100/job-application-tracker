@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./App.css";
 
 type JobApplication = {
@@ -14,9 +14,11 @@ type JobApplication = {
 
 function App() {
   const [editingId, setEditingId] = useState<number | null>(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [sortOrder, setSortOrder] = useState("newest");
   const [form, setForm] = useState<JobApplication>({
     id: 0,
@@ -92,6 +94,9 @@ function App() {
 
       setApplications(updatedApplications);
       setEditingId(null);
+
+      setSuccessMessage("Application updated successfully.");
+      setErrorMessage("");
     } else {
       const newApplication = {
         ...form,
@@ -99,6 +104,9 @@ function App() {
       };
 
       setApplications([...applications, newApplication]);
+
+      setSuccessMessage("Application submitted successfully.");
+      setErrorMessage("");
     }
 
     setForm({
@@ -169,7 +177,7 @@ function App() {
       <h1>Job Application Tracker</h1>
       <p>Track your job applications and interview progress.</p>
 
-      <form onSubmit={handleSubmit}>
+      <form ref={formRef} onSubmit={handleSubmit}>
         <input
           name="company"
           placeholder="Company"
@@ -232,6 +240,32 @@ function App() {
           {editingId !== null ? "Update Application" : "Add Application"}
         </button>
 
+        {editingId !== null && (
+          <button
+            type="button"
+            onClick={() => {
+              setEditingId(null);
+              setSuccessMessage("");
+              setErrorMessage("");
+
+              setForm({
+                id: 0,
+                company: "",
+                jobTitle: "",
+                status: "",
+                applicationDate: "",
+                hiringManagerName: "",
+                hiringManagerEmail: "",
+                notes: "",
+              });
+            }}
+          >
+            Cancel Edit
+          </button>
+        )}
+
+        {successMessage && <p className="success">{successMessage}</p>}
+
         {errorMessage && (
           <p className="error">{errorMessage}</p>
         )}
@@ -264,22 +298,32 @@ function App() {
         </div>
       </section>
 
-      <input
-        placeholder="Search by company"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
+      <div className="controls">
+        <input
+          placeholder="Search by company"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
 
-      <select
-        value={statusFilter}
-        onChange={(e) => setStatusFilter(e.target.value)}
-      >
-        <option value="All">All Statuses</option>
-        <option value="Applied">Applied</option>
-        <option value="Interview">Interview</option>
-        <option value="Rejected">Rejected</option>
-        <option value="Offer">Offer</option>
-      </select>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="All">All Statuses</option>
+          <option value="Applied">Applied</option>
+          <option value="Interview">Interview</option>
+          <option value="Rejected">Rejected</option>
+          <option value="Offer">Offer</option>
+        </select>
+
+        <select
+          value={sortOrder}
+          onChange={(e) => setSortOrder(e.target.value)}
+        >
+          <option value="newest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+        </select>
+      </div>
 
       {sortedApplications.map((application) => (
         <div className="application-card" key={application.id}>
@@ -297,28 +341,31 @@ function App() {
 
           <p>{application.notes}</p>
 
-          <button
-            onClick={() => {
-              setForm(application);
-              setEditingId(application.id);
-            }}
-          >
-            Edit
-          </button>
+          <div className="card-actions">
+            <button
+              onClick={() => {
+                setForm(application);
+                setEditingId(application.id);
+                formRef.current?.scrollIntoView({ behavior: "smooth" });
+              }}
+            >
+              Edit
+            </button>
 
-          <button
-            onClick={() => {
-              const confirmed = window.confirm(
-                "Are you sure you want to delete this application?"
-              );
+            <button
+              onClick={() => {
+                const confirmed = window.confirm(
+                  "Are you sure you want to delete this application?"
+                );
 
-              if (confirmed) {
-                deleteApplication(application.id);
-              }
-            }}
-          >
-            Delete
-          </button>
+                if (confirmed) {
+                  deleteApplication(application.id);
+                }
+              }}
+            >
+              Delete
+            </button>
+          </div>
         </div>
       ))}
     </main>
